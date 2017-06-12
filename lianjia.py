@@ -63,7 +63,7 @@ def send_file_to(attachment_file_name : str):
     part.add_header('Content-Disposition', 'attachment', filename=file_name)
     msg.attach(part)
     logging.info('start to connect to smtp.163.com.')
-    smtplib.SMTP_SSL("smtp.163.com", port=465, timeout=30)
+    smtp = smtplib.SMTP_SSL("smtp.163.com", port=465, timeout=30)
     logging.info('connected, start to login.')
     smtp.login(_from, _password)
     logging.info('logined, start to send ' + attachment_file_name)
