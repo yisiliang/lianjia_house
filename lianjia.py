@@ -1,6 +1,9 @@
 import urllib
+import urllib.request
 import gzip
 import time
+import sys 
+import os 
 from bs4 import BeautifulSoup
 
 headers = {
@@ -46,11 +49,20 @@ def get_content_from_url(url: str):
     return html
 
 
+def cur_file_dir():
+    path = sys.path[0]
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
+
 start_index: int = 1
 
 base_url = 'http://sh.lianjia.com/ershoufang/d'
 
-file_name = 'result_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
+file_name = cur_file_dir() + '/result_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
+print(file_name)
 file = open(file_name, 'w')
 
 total_house: int = 0
