@@ -17,6 +17,11 @@ headers = {
 }
 
 
+def get_current_time():
+    time_str = time.strftime('%Y-%m-%d %H:%M:%S')
+    return time_str
+
+
 def get_content_from_url(url: str):
     try:
         req = urllib.request.Request(url, None, headers)
@@ -94,9 +99,9 @@ while True:
 
         total_house = total_house + 1
         if total_house % 100 == 0:
-            print(str(total_house) + ' ' + str(start_index))
+            print(get_current_time() + ' house = [' + str(total_house) + '], url = [' + base_url + str(start_index) + ']')
 
 # time.sleep(5)
 file.close()
-print(str(total_house) + ' ' + str(start_index))
+print(get_current_time() + ' total house = [' + str(total_house) + '], last url = [' + base_url + str(start_index) + ']')
 
