@@ -9,7 +9,12 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
+import logging
 
+logging.basicConfig(filename='log1.log',
+                    format='%(asctime)s -%(name)s-%(levelname)s-%(module)s:%(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S %p',
+                    level=logging.DEBUG)
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -58,15 +63,10 @@ def send_file_to(attachment_file_name : str):
     part.add_header('Content-Disposition', 'attachment', filename=file_name)
     msg.attach(part)
 
-    smtp = smtplib.SMTP("smtp.163.com", timeout=30)
+    smtplib.SMTP_SSL("smtp.163.com", port=465, timeout=30)
     smtp.login(_from, _password)
     smtp.sendmail(_from, _from, msg.as_string())  # 发送邮件
     smtp.close()
-
-
-def get_current_time():
-    time_str = time.strftime('%Y-%m-%d %H:%M:%S')
-    return time_str
 
 
 def get_content_from_url(url: str):
@@ -103,69 +103,76 @@ def cur_file_dir():
 
 start_index: int = 1
 
-base_url = 'http://sh.lianjia.com/ershoufang/d'
 
-file_name = cur_file_dir() + '/result_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
-print(file_name)
-file = open(file_name, 'w')
+citys = ['sh' , 'bj', 'hz', 'sz', 'gz']
 
-total_house: int = 0
+for city in citys:
 
-while True:
+    base_url = 'http://' + city + '.lianjia.com/ershoufang/d'
 
-    html_context = get_content_from_url(base_url + str(start_index))
+    file_name = cur_file_dir() + '/' + city + '_data_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
 
-    if len(html_context) <= 100:
-        break
+    logging.info(file_name)
+    file = open(file_name, 'w')
 
-    start_index = start_index + 1
+    total_house: int = 0
 
-    soup = BeautifulSoup(html_context, 'lxml')
+    while True:
 
-    ele_list = soup.select('#js-ershoufangList > div.content-wrapper > div.content > div.m-list > ul > li')
+        html_context = get_content_from_url(base_url + str(start_index))
 
-    if len(ele_list) <= 0:
-        break
+        if len(html_context) <= 100:
+            break
 
-    for ele in ele_list:
-        title = ele.select_one('.js_fanglist_title').text
-        title = title.replace('\t', '').replace('\n', '').replace(' ', '').replace('|', '')
+        start_index = start_index + 1
 
-        size: str = ele.select_one('.info-table > .info-row > .row1-text').text
-        size = size.replace('\t', '').replace('\n', '').replace(' ', '')
+        soup = BeautifulSoup(html_context, 'lxml')
 
-        sizes = size.split('|')
+        ele_list = soup.select('#js-ershoufangList > div.content-wrapper > div.content > div.m-list > ul > li')
 
-        split_string = '|||'
+        if len(ele_list) <= 0:
+            break
 
-        if len(sizes) < 4:
-            size = size + split_string[0:4 - len(sizes)]
+        for ele in ele_list:
+            title = ele.select_one('.js_fanglist_title').text
+            title = title.replace('\t', '').replace('\n', '').replace(' ', '').replace('|', '')
 
-        price: str = ele.select_one('.info-table > .info-row > .price-item').text
-        price = price.replace('\t', '').replace('\n', '').replace(' ', '')
+            size: str = ele.select_one('.info-table > .info-row > .row1-text').text
+            size = size.replace('\t', '').replace('\n', '').replace(' ', '')
 
-        position_ele = ele.select_one('.info-table > .info-row > .row2-text')
-        age = position_ele.text
-        age = age.replace('\t', '').replace('\n', '').replace(' ', '')
+            sizes = size.split('|')
 
-        price_item = ele.select_one('.info-table > .info-row > .minor').text
-        price_item = price_item.replace('\t', '').replace('\n', '').replace(' ', '').replace('|', '')
+            split_string = '|||'
 
-        file.write(title + '|' + size + '|' + price + '|' + age + '|' + price_item + '\n')
+            if len(sizes) < 4:
+                size = size + split_string[0:4 - len(sizes)]
 
-        total_house = total_house + 1
-        if total_house % 100 == 0:
-            print(get_current_time() + ' house = [' + str(total_house) + '], url = [' + base_url + str(start_index) + ']')
+            price: str = ele.select_one('.info-table > .info-row > .price-item').text
+            price = price.replace('\t', '').replace('\n', '').replace(' ', '')
 
+            position_ele = ele.select_one('.info-table > .info-row > .row2-text')
+            age = position_ele.text
+            age = age.replace('\t', '').replace('\n', '').replace(' ', '')
 
-# time.sleep(5)
-file.close()
-print(get_current_time() + ' total house = [' + str(total_house) + '], last url = [' + base_url + str(start_index) + ']')
+            price_item = ele.select_one('.info-table > .info-row > .minor').text
+            price_item = price_item.replace('\t', '').replace('\n', '').replace(' ', '').replace('|', '')
 
+            file.write(title + '|' + size + '|' + price + '|' + age + '|' + price_item + '\n')
 
-gzip_file(file_name, file_name + '.gz')
-
-send_file_to(file_name + '.gz')
+            total_house = total_house + 1
+            if total_house % 100 == 0:
+                logging.info('house = [' + str(total_house) + '], url = [' + base_url + str(start_index) + ']')
 
 
+    # time.sleep(5)
+    file.close()
+    logging.info('total house = [' + str(total_house) + '], last url = [' + base_url + str(start_index) + ']')
 
+
+    gzip_file(file_name, file_name + '.gz')
+
+    send_file_to(file_name + '.gz')
+
+    
+    
+    
