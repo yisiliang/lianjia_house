@@ -2,9 +2,14 @@ import urllib
 import urllib.request
 import gzip
 import time
-import sys 
-import os 
+import sys
+import os
 from bs4 import BeautifulSoup
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -18,6 +23,45 @@ headers = {
     "Upgrade-Insecure-Requests": "1",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 }
+
+
+def gzip_file(src : str, dst : str):
+    fin = open(src, 'rb')
+    fout = gzip.open(dst, 'wb')
+
+    while True:
+        buf = fin.read(1024 * 8)
+        if len(buf) < 1:
+            break
+        fout.write(buf)
+
+    fin.close()
+    fout.close()
+
+
+def send_file_to(attachment_file_name : str):
+    _from = '********@163.com'
+    _password = '********'
+
+    msg = MIMEMultipart()
+    msg['Subject'] = 'lianjia program'
+    msg['From'] = _from
+    msg['To'] = _from
+
+    part = MIMEText('lianjia by program')
+    msg.attach(part)
+
+    part = MIMEApplication(open(attachment_file_name, 'rb').read())
+
+    file_name = os.path.basename(attachment_file_name)
+
+    part.add_header('Content-Disposition', 'attachment', filename=file_name)
+    msg.attach(part)
+
+    smtp = smtplib.SMTP("smtp.163.com", timeout=30)
+    smtp.login(_from, _password)
+    smtp.sendmail(_from, _from, msg.as_string())  # 发送邮件
+    smtp.close()
 
 
 def get_current_time():
@@ -113,7 +157,15 @@ while True:
         if total_house % 100 == 0:
             print(get_current_time() + ' house = [' + str(total_house) + '], url = [' + base_url + str(start_index) + ']')
 
+
 # time.sleep(5)
 file.close()
 print(get_current_time() + ' total house = [' + str(total_house) + '], last url = [' + base_url + str(start_index) + ']')
+
+
+gzip_file(file_name, file_name + '.gz')
+
+send_file_to(file_name + '.gz')
+
+
 
