@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import logging
 
-logging.basicConfig(filename='log1.log',
+logging.basicConfig(filename='lianjia.log',
                     format='%(asctime)s -%(name)s-%(levelname)s-%(module)s:%(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S %p',
                     level=logging.DEBUG)
@@ -62,10 +62,13 @@ def send_file_to(attachment_file_name : str):
 
     part.add_header('Content-Disposition', 'attachment', filename=file_name)
     msg.attach(part)
-
+    logging.info('start to connect to smtp.163.com.')
     smtplib.SMTP_SSL("smtp.163.com", port=465, timeout=30)
+    logging.info('connected, start to login.')
     smtp.login(_from, _password)
+    logging.info('logined, start to send ' + attachment_file_name)
     smtp.sendmail(_from, _from, msg.as_string())  # 发送邮件
+    logging.info('sent completed.')
     smtp.close()
 
 
