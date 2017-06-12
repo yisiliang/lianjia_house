@@ -48,8 +48,8 @@ def gzip_file(src: str, dst: str):
 
 
 def send_file_to(attachment_file_name: str):
-    _from = '***********@163.com'
-    _password = '**********'
+    _from = '********@163.com'
+    _password = '********'
 
     msg = MIMEMultipart()
     msg['Subject'] = 'lianjia program'
